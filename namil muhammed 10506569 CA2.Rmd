@@ -1,0 +1,228 @@
+---
+title: "Machine learning CA 2"
+author: "Namil Muhammed - 10506569"
+date: "3 August 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+## Start H2O
+library(h2o)
+library(ggplot2)
+
+```
+```{r}
+h2o.init()                  ##Use the h2o.init() method to initialize H2O.
+
+h2o.init(nthreads = -1)   
+h2o.clusterInfo()
+
+```
+####This below package provides an easy and simple way to read, write and display bitmap images stored in the JPEG format. It can read and write both files and in-memory raw vectors.
+```{r}
+library(jpeg)
+```
+####Read your machine's bird image
+```{r}
+birdimg <- readJPEG("E:/second semester/machine learinig/Bird Image for CA2.jpg")
+head(birdimg)              ##first six rows corresponding to the image
+```
+
+```{r}
+birdimgDM <- dim(birdimg)        ##Check Dimensions ofthe bird Image
+birdimgDM
+
+birdimgRGB <- data.frame(                    ##Assign RGB Channels to the birdImage data frame
+  x=rep(1:birdimgDM[2], each=birdimgDM[1]),
+  y=rep(birdimgDM[1]:1, birdimgDM[2]),
+  R= as.vector(birdimg[,,1]),
+  G= as.vector(birdimg[,,2]),
+  B= as.vector(birdimg[,,3])
+)
+head(birdimgRGB)                ##first six rows corresponding to the RGB bird image
+
+```
+####Using ggplot theme to plot a image
+```{r}
+plotTheme <- function(){
+  theme(
+    panel.background=element_rect(size=3,
+                                  colour = "black",
+                                  fill = "white"),
+    axis.ticks=element_line(size = 2),
+    panel.grid.major = element_line(colour = "gray80",
+                                    linetype = "dotted"),
+    panel.grid.minor = element_line(colour = "gray90",
+                                    linetype = "dashed"),
+    
+    axis.title.x = element_text(size = rel(1.2),
+                                face = "bold"),
+    axis.title.y = element_text(size = rel(1.2),
+                                face = "bold"),
+    plot.title = element_text(size = 20, face = "bold",
+                              vjust = 1.5)
+  )
+}
+##Plotting the RGB Image of Parrot
+ggplot(data = birdimgRGB, aes(x=x, y=y))+
+  geom_point(colour=rgb(birdimgRGB[c("R", "G", "B")]))+
+  labs(title = "Original Image: Bird")+
+  xlab("x")+
+  ylab("y")+
+  plotTheme()
+
+```
+
+```{r}
+##Display RGB Image Summary
+bird.hex <- as.h2o(birdimgRGB)
+
+head(bird.hex)
+```
+####Applying k-means clustering to the bird image through h2o
+####k means clustering with k=2 
+```{r}
+kmeans.2 <- h2o.kmeans(training_frame = bird.hex, k = 2, x = c('R','G','B'))
+
+kmeans.2@model$centers          #Dispay data with k=2 clusters
+
+##Predict model using k=2 function with h2o.predict
+kmeans2cluster <- h2o.predict(kmeans.2, bird.hex[,c('R','G','B')])
+
+head(as.data.frame(kmeans.2@model$centers[as.vector(kmeans2cluster)+1,]))
+
+
+```
+```{r}
+rgbcluster2 <- as.data.frame(kmeans.2@model$centers[as.vector(kmeans2cluster)+1,])[,c('r','g','b')]
+kcolors.2 <- rgb(rgbcluster2)
+
+##Plot the image with k=2 clusters
+
+ggplot(data = birdimgRGB, aes(x=x, y=y))+
+  geom_point(colour=kcolors.2)+
+  labs(title = paste(2, "Colours"))+
+  xlab("x")+
+  ylab("y")+
+  plotTheme()
+```
+
+```{r}
+##k means image clustering with k=3
+kmeans.3 <- h2o.kmeans(training_frame = bird.hex, k = 3, x = c('R','G','B'))
+
+kmeans.3@model$centers           #Display data with k=3 clusters
+
+##Predict model using k=3 function with h2o.predict
+
+kmeans3cluster <- h2o.predict(kmeans.3, bird.hex[,c('R','G','B')])    
+
+head(as.data.frame(kmeans.3@model$centers[as.vector(kmeans3cluster)+1,]))
+```
+```{r}
+rgbcluster3 <- as.data.frame(kmeans.3@model$centers[as.vector(kmeans3cluster)+1,])[,c('r','g','b')]
+kcolors.3 <- rgb(rgbcluster3)
+
+##Plot the image with k=3 clusters
+
+ggplot(data = birdimgRGB, aes(x=x, y=y))+
+  geom_point(colour=kcolors.3)+
+  labs(title = paste(3, "Colours"))+
+  xlab("x")+
+  ylab("y")+
+  plotTheme()
+```
+
+```{r}
+##k means image clustering with k=4
+kmeans.4 <- h2o.kmeans(training_frame = bird.hex, k = 4, x = c('R','G','B'))
+
+kmeans.4@model$centers     ##data with k=4 clusters
+
+##Predict model using k=4 function with h2o.predict
+
+kmeans4cluster <- h2o.predict(kmeans.4, bird.hex[,c('R','G','B')])
+
+head(as.data.frame(kmeans.4@model$centers[as.vector(kmeans4cluster)+1,]))
+```
+```{r}
+rgbcluster4 <- as.data.frame(kmeans.4@model$centers[as.vector(kmeans4cluster)+1,])[,c('r','g','b')]
+kcolors.4 <- rgb(rgbcluster4)
+
+##Plot the image with k=4 clusters
+ggplot(data = birdimgRGB, aes(x=x, y=y))+
+  geom_point(colour=kcolors.4)+
+  labs(title = paste(4, "Colours"))+
+  xlab("x")+
+  ylab("y")+
+  plotTheme()
+```
+
+```{r}
+##k means image clustering with k=5
+kmeans.5 <- h2o.kmeans(training_frame = bird.hex, k = 5, x = c('R','G','B'))
+
+kmeans.5@model$centers        ##Display data with k=5 clusters
+
+##Predict model using k=5 function with h2o.predict
+
+kmeans5cluster <- h2o.predict(kmeans.5, bird.hex[,c('R','G','B')])
+
+head(as.data.frame(kmeans.5@model$centers[as.vector(kmeans5cluster)+1,]))
+```
+
+```{r}
+rgbcluster5 <- as.data.frame(kmeans.5@model$centers[as.vector(kmeans5cluster)+1,])[,c('r','g','b')]
+kcolors.5 <- rgb(rgbcluster5)
+##Plot the image with k=5 clusters
+ggplot(data = birdimgRGB, aes(x=x, y=y))+
+  geom_point(colour=kcolors.5)+
+  labs(title = paste(5, "Colours"))+
+  xlab("x")+
+  ylab("y")+
+  plotTheme()
+```
+ 
+```{r}
+## function for Compare predicted image and actual image
+sse <- function(predicted, actuals) {
+  sum ( (predicted-actuals)^2, na.rm=TRUE ) 
+}
+```
+###Elbow Method for finding optimal value of k
+###Creates Elbow for 2,3,4,5 clusters of Image
+```{r}
+elbow <- c(sse(rgbcluster2, birdimgRGB[,c('R','G','B')]),
+           sse(rgbcluster3, birdimgRGB[,c('R','G','B')]),
+           sse(rgbcluster4, birdimgRGB[,c('R','G','B')]),
+           sse(rgbcluster5, birdimgRGB[,c('R','G','B')]))
+##Plot line graph of Elbow using both line and points to see 
+##optimal value of k for clusters by using elbow method
+plot(elbow, type = 'b')
+```
+
+```{r}
+##function to compute total-within-cluster
+k <- 1:15
+elbow <- vector()
+for (i in k){
+  kmeans <- h2o.kmeans(training_frame = bird.hex, k = i, x = c('R','G','B'))
+  kmeanscluster <- h2o.predict(kmeans, bird.hex[,c('R','G','B')])
+  rgbcluster <- as.data.frame(kmeans@model$centers[as.vector(kmeanscluster)+1,])[,c('r','g','b')]
+  elbow <- append(elbow, sse(rgbcluster, birdimgRGB[,c('R','G','B')]))
+}
+
+#Extract elbow for 1-15 clusters(k elbow)
+
+plot(elbow, type='b', xlab = 'Number of Clusters', ylab = 'Sum of Squared Errors')
+
+```
+
+###From this plot we can see that the optimal value is k=4 by using elbow method 
+###because after k=4 there is no significant change.
